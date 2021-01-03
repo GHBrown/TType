@@ -5,13 +5,11 @@
 #include <math.h>
 #include <time.h>
 
-//use curses.h or ncurses.h for special character (TAB, SUPER, etc.) recognition
-/*To Do:
-  allow a bit of user control and input at the start of game (and make sure it doesn't start immediately
-  upload to github
-  make sure all functions have documentation
-  maybe allow to take two integer vector inputs to specify number of words and word length
- */
+/*
+  To Do:
+  using git already but sync with github
+  make sure all functions have proper documentation
+*/
 
 
 void clearTerminal() {
@@ -81,30 +79,54 @@ int getElapsedTime(int startTime) {
 }
 
 
-char* makeRandomString(int length) {
+void getSettings(int* settingsArray) {
+  /*
+   Asks user for settings of game.
+   ---Inputs---
+   settingsArray: pointer to int array which stores settings
+   --Outputs--
+   NONE
+  */
+  int writeBuffer;
+  int remainder=100;
+  
+  printf("Percentage points unallocated: %d \n\n",remainder);
+  printf("Percentage of characters which should be lower case letters (0-100): ");
+  scanf("%d",&writeBuffer); getchar(); //getchar() takes care of lingering newline in buffer
+  settingsArray[0]=writeBuffer;
+  remainder-=writeBuffer;
+  clearTerminal();
+  printf("Percentage points unallocated: %d \n\n",remainder);
+  printf("Percentage of characters which should be upper case letters (0-100): ");
+  scanf("%d",&writeBuffer); getchar(); //getchar() takes care of lingering newline in buffer
+  settingsArray[1]=writeBuffer;
+  remainder-=writeBuffer;
+  clearTerminal();
+  printf("Percentage points unallocated: %d \n",remainder);
+  printf("***You must allocate all remaining percentage points now***\n\n");
+  printf("Input percentage of characters which should be numbers and special characters (0-100): ");
+  scanf("%d",&writeBuffer); getchar(); //getchar() takes care of lingering newline in buffer
+  settingsArray[2]=writeBuffer;
+}
+
+
+char* makeRandomString(int length,int* settingsArray) {
   /*Makes a random string of specified length.
     ---Inputs---
     length: desired length of output string, int
+    settingsArray: 3 element int array containing character weights
     ---Outputs---
     output: character array of length random characters, char array
   */
 
-  char* output=malloc(length+1);
-  float lowerWeight=0.5;
-  float upperWeight=0.1;
-  float specialWeight=0.4;
-  
   char lowerLetters[27]="abcdefghijklmnopqrstuvwxyz";
   char upperLetters[27]="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   char special[60]="1234567890`~!@#$%^&*()-_=+[]{}\\|;:'\"/?,<.>";
-  int numChars=strlen(lowerLetters)+strlen(upperLetters)+strlen(special);
 
-  char* allCharacters=malloc(numChars+1);
-  strcpy(allCharacters,lowerLetters);
-  strcat(allCharacters,upperLetters);
-  strcat(allCharacters,special);
-  //printf("all possible characters: \n%s \n",allCharacters);
-  free(allCharacters);
+  char* output=malloc(length+1);
+  float lowerWeight=(float) settingsArray[0]/100;
+  float upperWeight=(float) settingsArray[1]/100;
+  float specialWeight=(float) settingsArray[2]/100;
 
   float typeRand;
   int randomIndex;
@@ -142,7 +164,7 @@ float stringFractionCorrect(char* prompt, char* entry) {
   */
   int lengthPromptOriginal=strlen(prompt);
   int lengthEntryOriginal=strlen(entry);
-  char* bufferChar="A";
+  char* bufferChar="\n";
   char* promptEqual;
   char* entryEqual;
   int i;
@@ -207,12 +229,12 @@ int computeWPM(int charsTotal,int charsCorrect,int t_elapsed) {
 }
 
 
-char* makePrompt() {
+char* makePrompt(int* settingsArray) {
   /*
     Makes a full prompt with a random number of words
     (which each have a random number of characters).
     ---Inputs---
-    NA
+    settingsArray: 3 element int array containing character weights
     ---Outputs---
     prompt, a pointer to the character array containing the prompt
 */
@@ -229,7 +251,7 @@ char* makePrompt() {
   char* writeBuffer;
   for (curWord=0; curWord<numWords; curWord++) {
     wordLength=randRange(minWordLength,maxWordLength);
-    writeBuffer=makeRandomString(wordLength);
+    writeBuffer=makeRandomString(wordLength,settingsArray);
     strcat(prompt,writeBuffer);
     strcat(prompt," ");
   }
@@ -239,7 +261,7 @@ char* makePrompt() {
 }
 
 
-void runTurn(int* round,int* charsTotal,int* charsCorrect,int startingTime) {
+void runTurn(int* round,int* charsTotal,int* charsCorrect,int startingTime, int* settingsArray) {
   /*
     Displays current statistics (accuracy, score, WPM) and randomized prompt.
     Then takes user input and updates the statistics.
@@ -247,12 +269,13 @@ void runTurn(int* round,int* charsTotal,int* charsCorrect,int startingTime) {
     charsTotal: total number of chars user has typed
     charsCorrect: total number of characters user has typed correctly
     startingTime: time (in seconds) at which the game was started
+    settingsArray: 3 element int array containing character weights
     //possibly character type ratios?
     ---Outputs---
-    NA
+    NONE
   */
   int fgetsMax=256;
-  char* prompt=makePrompt();
+  char* prompt=makePrompt(settingsArray);
   char* userInput=malloc(fgetsMax+1);
   int promptLength=strlen(prompt);
   float overallFractionCorrect;
@@ -285,30 +308,33 @@ void runTurn(int* round,int* charsTotal,int* charsCorrect,int startingTime) {
 }
 
 
-void runGame() {
+void runGame(int* settingsArray) {
   /*
     Repeatedly runs a single turn and clear screen in between turns.
     ---Inputs---
-    NA
+    settingsArray: 3 element int array containing character weights
     ---Outputs---
-    NA
+    NONE
    */
-  //set time equal to zero
   srand(time(NULL)); //initializes random number generator
   int round=1, charsTotal=0, charsCorrect=0;
   int t0=startTimer();
 
-  printf(" \n "); //prints simple character so first clear works
   while (true) {
     clearTerminal();
-    runTurn(&round, &charsTotal, &charsCorrect, t0);
+    printf("round: %d \n",round);
+    runTurn(&round, &charsTotal, &charsCorrect, t0, settingsArray);
   }
 }
 
 
 int main() {
 
-  runGame();
+  int settings[3];
+
+  getSettings(settings);
+
+  runGame(settings);
 
   return 0;
 }
