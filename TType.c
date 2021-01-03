@@ -102,9 +102,9 @@ void getSettings(int* settingsArray) {
   settingsArray[1]=writeBuffer;
   remainder-=writeBuffer;
   clearTerminal();
-  printf("Percentage points unallocated: %d \n",remainder);
   printf("***You must allocate all remaining percentage points now***\n");
-  printf("***The game will begin after you enter this final number***\n\n");
+  printf("***The game will begin after you enter this final number***\n");
+  printf("Percentage points unallocated: %d \n\n",remainder);
   printf("Input percentage of characters which should be numbers and special characters (0-100): ");
   scanf("%d",&writeBuffer); getchar(); //getchar() takes care of lingering newline in buffer
   settingsArray[2]=writeBuffer;
