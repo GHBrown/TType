@@ -323,7 +323,6 @@ void runGame(int* settingsArray) {
 
   while (true) {
     clearTerminal();
-    printf("round: %d \n",round);
     runTurn(&round, &charsTotal, &charsCorrect, t0, settingsArray);
   }
 }
